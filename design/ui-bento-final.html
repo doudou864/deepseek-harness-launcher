@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DeepSeek Harness 启动器 · 彩色便当 Bento 精修版</title>
+<style>
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "PingFang SC", sans-serif;
+    background: linear-gradient(180deg, #f6f1e7, #ece3d2);
+    min-height: 100vh; padding: 48px 20px 80px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .page-head { text-align: center; margin-bottom: 44px; }
+  .page-head h1 { color: #2c2416; font-size: 25px; font-weight: 800; letter-spacing: -.02em; }
+  .page-head p { color: #a3957c; font-size: 13.5px; margin-top: 8px; }
+
+  .journey { display: flex; gap: 36px; flex-wrap: wrap; justify-content: center; align-items: flex-start; margin-bottom: 56px; }
+  .step { display: flex; flex-direction: column; }
+  .step-tag { display: flex; align-items: center; gap: 8px; margin: 0 auto 14px; }
+  .step-num { font-family: ui-monospace, Menlo, monospace; font-size: 11px; font-weight: 700; color: #fff;
+              background: #c9b492; border-radius: 6px; padding: 3px 8px; }
+  .step-name { font-size: 13px; font-weight: 700; color: #6e6552; }
+
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .lights { display: flex; gap: 8px; }
+  .light { width: 12px; height: 12px; border-radius: 50%; }
+  .light.r { background: #FF5F57; } .light.y { background: #FEBC2E; } .light.g { background: #28C840; }
+  img.logo { outline: 1px solid rgba(0,0,0,.08); outline-offset: -1px; }
+  button:focus-visible { outline: 2.5px solid rgba(30,94,240,.55); outline-offset: 2px; }
+
+  /* ============ 窗口（同心圆角：窗30 = 卡16 + padding 14） ============ */
+  .win {
+    width: 452px; border-radius: 30px; background: #fffdf8;
+    box-shadow: 0 30px 70px rgba(120,90,30,.22), inset 0 2px 0 rgba(255,255,255,.8);
+    overflow: hidden;
+  }
+  .win .titlebar { display: flex; align-items: center; padding: 15px 18px 0; }
+  .win .hint { margin-left: auto; font-size: 11px; color: #c2b696; }
+  .win .content { padding: 12px 14px 14px; }
+
+  .header { display: flex; align-items: center; gap: 12px; margin: 2px 4px 13px; }
+  .logo { width: 44px; height: 44px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.14); }
+  .header .title { font-size: 19.5px; font-weight: 800; color: #2c2416; letter-spacing: -.02em; text-wrap: balance; }
+  .header .sub { font-size: 11.5px; color: #a3957c; margin-top: 1px; font-weight: 500; }
+  .ver { margin-left: auto; font-size: 10.5px; font-weight: 700; color: #c2b696; background: #f3ecdd;
+         padding: 3px 8px; border-radius: 999px; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tile { border-radius: 16px; }
+
+  /* ---------- 状态卡（全宽） ---------- */
+  .status { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+  .dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+  @keyframes breathe { 0%,100% { box-shadow: 0 0 0 3px rgba(23,178,106,.18);} 50% { box-shadow: 0 0 0 6px rgba(23,178,106,.3);} }
+  @keyframes pulseAmber { 0%,100% { box-shadow: 0 0 0 3px rgba(245,166,35,.2);} 50% { box-shadow: 0 0 0 7px rgba(245,166,35,.32);} }
+  .status .t { font-size: 15.5px; font-weight: 800; }
+  .status .s { font-size: 11.5px; font-weight: 500; margin-top: 1px; opacity: .75; }
+  .addr { margin-left: auto; display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 700;
+          padding: 5px 11px; border-radius: 999px; white-space: nowrap; cursor: pointer; border: none;
+          transition-property: transform, filter; transition-duration: .15s; }
+  .addr:hover { filter: brightness(.97); transform: translateY(-1px); }
+  .addr:active { transform: scale(.96); }
+  .addr .copy { font-size: 11px; opacity: .55; }
+
+  .status.running { background: #dff5e7; }
+  .status.running .dot { background: #17b26a; animation: breathe 2.2s ease-in-out infinite; }
+  .status.running .t { color: #0c5c36; }
+  .status.running .s { color: #4d8a6a; }
+  .status.running .addr { color: #0c5c36; background: rgba(255,255,255,.8); }
+
+  .status.starting { background: #fdf0d5; }
+  .status.starting .dot { background: #f5a623; animation: pulseAmber 1.2s ease-in-out infinite; }
+  .status.starting .t { color: #8a5a00; }
+  .status.starting .s { color: #b0854a; }
+  .status.starting .addr { color: #8a5a00; background: rgba(255,255,255,.75); }
+
+  .status.stopped { background: #f0ebe0; }
+  .status.stopped .dot { background: #b4a98f; }
+  .status.stopped .t { color: #6e6552; }
+  .status.stopped .s { color: #a3957c; }
+  .status.stopped .addr { color: #a3957c; background: rgba(255,255,255,.6); cursor: default; }
+
+  /* ---------- 主操作按钮 ---------- */
+  .act {
+    border: none; cursor: pointer; height: 116px; border-radius: 16px; color: #fff; text-align: left;
+    padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between;
+    transition-property: transform, box-shadow, filter; transition-duration: .15s; transition-timing-function: ease-out;
+  }
+  .act .badge { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,.24);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 19px; box-shadow: inset 0 1px 0 rgba(255,255,255,.35); }
+  .act .badge .play-fix { margin-left: 3px; } /* 播放键光学校正 */
+  .act .label { font-size: 16.5px; font-weight: 800; letter-spacing: .01em; }
+  .act .en { font-size: 10px; opacity: .7; font-weight: 700; letter-spacing: .08em; margin-top: 2px; }
+  .act.start { background: linear-gradient(150deg, #4d8dff, #1e5ef0);
+               box-shadow: 0 10px 24px rgba(30,94,240,.32), 0 2px 6px rgba(30,94,240,.25); }
+  .act.stop  { background: linear-gradient(150deg, #ff7a5c, #f03e2b);
+               box-shadow: 0 10px 24px rgba(240,62,43,.3), 0 2px 6px rgba(240,62,43,.22); }
+  .act.start:hover { transform: translateY(-2px); filter: brightness(1.06);
+                     box-shadow: 0 14px 30px rgba(30,94,240,.4), 0 3px 8px rgba(30,94,240,.28); }
+  .act.stop:hover  { transform: translateY(-2px); filter: brightness(1.05);
+                     box-shadow: 0 14px 30px rgba(240,62,43,.38), 0 3px 8px rgba(240,62,43,.26); }
+  .act:active { transform: scale(.96); }
+  .act:disabled {
+    background: #ede7d9; color: #b9b09c; cursor: default; transform: none; filter: none;
+    box-shadow: none;
+  }
+  .act:disabled .badge { background: rgba(255,255,255,.55); box-shadow: none; }
+  .act:disabled .en { opacity: .5; }
+  .act .spin { width: 19px; height: 19px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.4);
+               border-top-color: #fff; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .act.busy { background: linear-gradient(150deg, #f7b733, #f09819); cursor: default;
+              box-shadow: 0 10px 24px rgba(240,152,25,.3); }
+  .act.busy:hover { transform: none; filter: none; }
+
+  /* ---------- 底部操作条 ---------- */
+  .bottom { grid-column: 1 / -1; background: #f3ecdd; display: flex; align-items: center; gap: 10px; padding: 10px; }
+  .pill { flex: 1; height: 34px; border: none; border-radius: 999px; cursor: pointer;
+          background: #fffdf8; color: #5c4f36; font-size: 12.5px; font-weight: 700;
+          box-shadow: 0 1px 4px rgba(120,90,30,.14);
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          transition-property: transform, box-shadow; transition-duration: .15s; }
+  .pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(120,90,30,.2); }
+  .pill:active { transform: scale(.97); }
+  .pill kbd { font-family: ui-monospace, Menlo, monospace; font-size: 10px; font-weight: 700; color: #b8ab8f;
+              background: #f3ecdd; border-radius: 4px; padding: 1px 5px; }
+
+  .footer { text-align: center; font-size: 11.5px; color: #a3957c; margin-top: 12px; font-weight: 500; white-space: nowrap; }
+  .footer b.g { color: #17b26a; } .footer b.a { color: #f09819; }
+
+  /* ============ 精修细节说明卡 ============ */
+  .notes { width: 100%; max-width: 940px; background: #fffdf8; border-radius: 20px;
+           box-shadow: 0 16px 40px rgba(120,90,30,.15); padding: 24px 28px; }
+  .notes h3 { font-size: 15px; font-weight: 800; color: #2c2416; margin-bottom: 14px; }
+  .notes ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 24px;
+              list-style: none; }
+  .notes li { font-size: 12.5px; color: #6e6552; line-height: 1.6; padding-left: 18px; position: relative; }
+  .notes li::before { content: '✦'; position: absolute; left: 0; color: #d9a441; }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>彩色便当 Bento · 精修版</h1>
+  <p>完整三态旅程 · 悬停/按压可试微交互 · 确认后按此用 SwiftUI 实现</p>
+</div>
+
+<div class="journey">
+
+  <!-- ========== 状态 1：未运行 ========== -->
+  <div class="step">
+    <div class="step-tag"><span class="step-num">STATE 1</span><span class="step-name">未运行（初始态）</span></div>
+    <div class="win">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="hint">↔ 可调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../logo-1.png" alt="logo">
+          <div>
+            <div class="title">DeepSeek Harness</div>
+            <div class="sub">本地服务控制台</div>
+          </div>
+          <div class="ver">v1.1</div>
+        </div>
+        <div class="grid">
+          <div class="tile status stopped">
+            <div class="dot"></div>
+            <div>
+              <div class="t">服务未运行</div>
+              <div class="s">点击下方「启动」开始</div>
+            </div>
+            <div class="addr mono">127.0.0.1:3080</div>
+          </div>
+          <button class="tile act start">
+            <span class="badge"><span class="play-fix">▶</span></span>
+            <span><span class="label">启动</span><div class="en">START</div></span>
+          </button>
+          <button class="tile act" disabled>
+            <span class="badge">⏻</span>
+            <span><span class="label">退出服务</span><div class="en">STOP</div></span>
+          </button>
+          <div class="tile bottom">
+            <button class="pill">🌐 在浏览器中打开 <kbd>⌘O</kbd></button>
+            <button class="pill">⟳ 刷新状态 <kbd>⌘R</kbd></button>
+          </div>
+        </div>
+        <div class="footer">○ 服务未运行 · 启动后浏览器将自动打开</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 状态 2：启动中 ========== -->
+  <div class="step">
+    <div class="step-tag"><span class="step-num">STATE 2</span><span class="step-name">启动中（过渡态）</span></div>
+    <div class="win">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="hint">↔ 可调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../logo-1.png" alt="logo">
+          <div>
+            <div class="title">DeepSeek Harness</div>
+            <div class="sub">本地服务控制台</div>
+          </div>
+          <div class="ver">v1.1</div>
+        </div>
+        <div class="grid">
+          <div class="tile status starting">
+            <div class="dot"></div>
+            <div>
+              <div class="t">正在启动…</div>
+              <div class="s">等待端口就绪 <span class="mono">12s</span> / 最长 90s</div>
+            </div>
+            <div class="addr mono">127.0.0.1:3080</div>
+          </div>
+          <button class="tile act busy">
+            <span class="badge"><span class="spin"></span></span>
+            <span><span class="label">启动中…</span><div class="en">STARTING</div></span>
+          </button>
+          <button class="tile act" disabled>
+            <span class="badge">⏻</span>
+            <span><span class="label">退出服务</span><div class="en">STOP</div></span>
+          </button>
+          <div class="tile bottom">
+            <button class="pill">🌐 在浏览器中打开 <kbd>⌘O</kbd></button>
+            <button class="pill">⟳ 刷新状态 <kbd>⌘R</kbd></button>
+          </div>
+        </div>
+        <div class="footer"><b class="a">●</b> 正在启动 · 首次启动需联网下载，请稍候</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 状态 3：运行中 ========== -->
+  <div class="step">
+    <div class="step-tag"><span class="step-num">STATE 3</span><span class="step-name">运行中（完成态）</span></div>
+    <div class="win">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="hint">↔ 可调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../logo-1.png" alt="logo">
+          <div>
+            <div class="title">DeepSeek Harness</div>
+            <div class="sub">本地服务控制台</div>
+          </div>
+          <div class="ver">v1.1</div>
+        </div>
+        <div class="grid">
+          <div class="tile status running">
+            <div class="dot"></div>
+            <div>
+              <div class="t">服务运行中</div>
+              <div class="s">已运行 <span class="mono">2 小时 13 分</span> · 响应正常</div>
+            </div>
+            <button class="addr mono" title="点击复制地址">127.0.0.1:3080 <span class="copy">⧉</span></button>
+          </div>
+          <button class="tile act" disabled>
+            <span class="badge"><span class="play-fix">▶</span></span>
+            <span><span class="label">启动</span><div class="en">RUNNING</div></span>
+          </button>
+          <button class="tile act stop">
+            <span class="badge">⏻</span>
+            <span><span class="label">退出服务</span><div class="en">STOP</div></span>
+          </button>
+          <div class="tile bottom">
+            <button class="pill">🌐 在浏览器中打开 <kbd>⌘O</kbd></button>
+            <button class="pill">⟳ 刷新状态 <kbd>⌘R</kbd></button>
+          </div>
+        </div>
+        <div class="footer"><b class="g">●</b> 服务运行中 · 端口 3080 可访问 · 日志 dsh-server.log</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========== 精修细节 ========== -->
+<div class="notes">
+  <h3>✦ 本版精修细节</h3>
+  <ul>
+    <li>补齐三态旅程：未运行 / 启动中（琥珀色+转圈）/ 运行中，录屏叙事完整</li>
+    <li>同心圆角：窗口 30px = 卡片 16px + 边距 14px，视觉严谨</li>
+    <li>图标放进磨砂圆形徽章，播放键做光学校正（右偏 3px）</li>
+    <li>状态灯呼吸动画：运行绿 / 启动琥珀脉冲 / 停止沙灰</li>
+    <li>地址胶囊可点击复制（⧉ 提示），等宽数字不跳动</li>
+    <li>运行中显示「已运行 2 小时 13 分」时长</li>
+    <li>快捷键提示 ⌘O 打开浏览器 / ⌘R 刷新状态</li>
+    <li>禁用态统一沙色，与奶油底和谐；按钮按压缩放 0.96</li>
+    <li>窗口支持调整大小，有最小尺寸保护</li>
+  </ul>
+</div>
+
+</body>
+</html>

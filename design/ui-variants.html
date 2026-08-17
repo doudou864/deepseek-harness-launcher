@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DeepSeek Harness 启动器 · 四款风格设计稿</title>
+<style>
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "PingFang SC", sans-serif;
+    background: #1a1a1e; min-height: 100vh; padding: 48px 24px 80px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .page-head { text-align: center; margin-bottom: 52px; }
+  .page-head h1 { color: #f5f5f7; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .page-head p { color: #8e8e93; font-size: 14px; margin-top: 8px; }
+
+  .section { width: 100%; max-width: 860px; margin-bottom: 72px; }
+  .meta { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .num { font-size: 13px; font-weight: 700; color: #0a84ff; font-family: ui-monospace, Menlo, monospace; }
+  .meta h2 { color: #f5f5f7; font-size: 19px; font-weight: 700; }
+  .desc { color: #98989d; font-size: 13.5px; line-height: 1.6; margin-bottom: 22px; max-width: 640px; }
+  .desc b { color: #c7c7cc; font-weight: 600; }
+
+  .stage { border-radius: 20px; padding: 56px 24px; display: flex; justify-content: center; }
+
+  /* 共享：窗口交通灯 */
+  .lights { display: flex; gap: 8px; }
+  .light { width: 12px; height: 12px; border-radius: 50%; }
+  .light.r { background: #FF5F57; } .light.y { background: #FEBC2E; } .light.g { background: #28C840; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
+  img.logo { outline: 1px solid rgba(0,0,0,.1); outline-offset: -1px; }
+
+  /* ============================================================
+     ① 液态玻璃 Liquid Glass（macOS 26 原生风）
+     ============================================================ */
+  .stage-a {
+    background:
+      radial-gradient(ellipse 90% 70% at 15% 10%, #4ac9e8 0%, transparent 55%),
+      radial-gradient(ellipse 80% 60% at 85% 15%, #7b6ff0 0%, transparent 55%),
+      radial-gradient(ellipse 90% 70% at 80% 90%, #f0789a 0%, transparent 55%),
+      radial-gradient(ellipse 80% 60% at 10% 85%, #f5b86e 0%, transparent 55%),
+      linear-gradient(160deg, #3a7bd5, #8e5fb8);
+  }
+  .win-a {
+    width: 470px; border-radius: 20px; overflow: hidden; position: relative;
+    background: rgba(255,255,255,.22);
+    backdrop-filter: blur(34px) saturate(1.6);
+    -webkit-backdrop-filter: blur(34px) saturate(1.6);
+    box-shadow: 0 30px 80px rgba(20,20,40,.45), inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 .5px rgba(255,255,255,.35);
+  }
+  .win-a .titlebar { display: flex; align-items: center; padding: 14px 16px 0; }
+  .win-a .hint { margin-left: auto; font-size: 11px; color: rgba(255,255,255,.75); text-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .win-a .content { padding: 16px 22px 18px; }
+  .win-a .header { display: flex; align-items: center; gap: 13px; margin-bottom: 16px; }
+  .win-a .logo { width: 50px; height: 50px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .win-a h1.title { font-size: 21px; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.25); letter-spacing: -.02em; text-wrap: balance; }
+  .win-a .sub { font-size: 12px; color: rgba(255,255,255,.85); text-shadow: 0 1px 3px rgba(0,0,0,.2); margin-top: 2px; }
+  .glass-card {
+    display: flex; align-items: center; gap: 11px;
+    background: rgba(255,255,255,.32);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 0 0 .5px rgba(255,255,255,.3), 0 4px 14px rgba(20,20,50,.12);
+    border-radius: 14px; padding: 11px 14px; margin-bottom: 16px;
+  }
+  .glass-dot { width: 11px; height: 11px; border-radius: 50%; background: #2fe675; flex-shrink: 0;
+               box-shadow: 0 0 10px rgba(47,230,117,.9), 0 0 0 3px rgba(47,230,117,.25); animation: breathe 2s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { box-shadow: 0 0 6px rgba(47,230,117,.7), 0 0 0 3px rgba(47,230,117,.2);} 50% { box-shadow: 0 0 14px rgba(47,230,117,1), 0 0 0 5px rgba(47,230,117,.3);} }
+  .glass-status { font-size: 14.5px; font-weight: 600; color: #10411f; }
+  .glass-detail { font-size: 11.5px; color: rgba(16,65,31,.65); margin-top: 1px; }
+  .glass-addr { margin-left: auto; font-size: 12px; color: #0d3d1c; background: rgba(255,255,255,.45);
+                padding: 4px 9px; border-radius: 8px; white-space: nowrap;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 0 0 .5px rgba(255,255,255,.4); }
+  .glass-actions { display: flex; gap: 12px; margin-bottom: 14px; }
+  .glass-btn {
+    flex: 1; height: 100px; border: none; border-radius: 16px; cursor: pointer; color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    font-size: 16px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.25);
+    transition-property: transform, filter, box-shadow; transition-duration: .15s; transition-timing-function: ease-out;
+  }
+  .glass-btn .ico { font-size: 24px; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+  .glass-btn .ico.play { margin-left: 4px; } /* 光学校正 */
+  .glass-btn.start { background: rgba(10,132,255,.55);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 .5px rgba(255,255,255,.25), 0 8px 20px rgba(10,132,255,.35); }
+  .glass-btn.stop  { background: rgba(255,59,48,.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 0 0 .5px rgba(255,255,255,.22), 0 8px 20px rgba(255,59,48,.3); }
+  .glass-btn:hover { filter: brightness(1.12) saturate(1.1); transform: translateY(-1px); }
+  .glass-btn:active { transform: scale(.96); }
+  .glass-secondary { display: flex; gap: 10px; margin-bottom: 14px; }
+  .glass-pill {
+    flex: 1; height: 34px; border: none; border-radius: 999px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 13px; font-weight: 500; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.2);
+    background: rgba(255,255,255,.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 .5px rgba(255,255,255,.3);
+    transition-property: background, transform; transition-duration: .15s;
+  }
+  .glass-pill:hover { background: rgba(255,255,255,.42); }
+  .glass-pill:active { transform: scale(.97); }
+  .glass-footer { text-align: center; font-size: 11.5px; color: rgba(255,255,255,.9); text-shadow: 0 1px 2px rgba(0,0,0,.18);
+                  padding-top: 12px; border-top: .5px solid rgba(255,255,255,.3); white-space: nowrap; }
+
+  /* ============================================================
+     ② 极简暗夜 Linear / Vercel 风
+     ============================================================ */
+  .stage-b { background: linear-gradient(180deg, #26262b, #1c1c20); }
+  .win-b {
+    width: 470px; border-radius: 14px; overflow: hidden;
+    background: #101014; border: 1px solid rgba(255,255,255,.09);
+    box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 4px 16px rgba(0,0,0,.4);
+  }
+  .win-b .titlebar { display: flex; align-items: center; padding: 13px 16px;
+                     border-bottom: 1px solid rgba(255,255,255,.06); }
+  .win-b .tab { margin: 0 auto; font-size: 12px; color: #6b6f76; font-family: ui-monospace, Menlo, monospace; }
+  .win-b .lights-spacer { width: 52px; }
+  .win-b .content { padding: 22px 24px 18px; }
+  .win-b .header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .win-b .mark { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg,#3b82f6,#8b5cf6);
+                 display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px;
+                 box-shadow: 0 2px 8px rgba(59,130,246,.35); }
+  .win-b h1.title { font-size: 15.5px; font-weight: 600; color: #ececee; letter-spacing: -.01em; }
+  .win-b .sub { font-size: 11.5px; color: #5f636b; margin-top: 2px; font-family: ui-monospace, Menlo, monospace; }
+  .win-b .addr { margin-left: auto; font-size: 12px; color: #8a8f98; background: rgba(255,255,255,.05);
+                 border: 1px solid rgba(255,255,255,.08); padding: 4px 9px; border-radius: 6px; white-space: nowrap; }
+  .b-statusrow { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .b-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.6); }
+  .b-status { font-size: 13px; color: #c9cbd1; }
+  .b-ms { margin-left: auto; font-size: 11.5px; color: #4ade80; font-family: ui-monospace, Menlo, monospace; }
+  .b-label { font-size: 10.5px; letter-spacing: .12em; color: #54575e; text-transform: uppercase; margin-bottom: 10px; font-weight: 600; }
+  .b-actions { display: flex; gap: 10px; margin-bottom: 14px; }
+  .b-btn {
+    flex: 1; height: 72px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition-property: background, border-color, transform, box-shadow; transition-duration: .15s;
+  }
+  .b-btn.start { background: #f5f5f7; color: #0c0c0e; border: 1px solid transparent; box-shadow: 0 2px 10px rgba(255,255,255,.08); }
+  .b-btn.start:hover { background: #ffffff; box-shadow: 0 4px 18px rgba(255,255,255,.14); transform: translateY(-1px); }
+  .b-btn.stop { background: transparent; color: #f87171; border: 1px solid rgba(248,113,113,.35); }
+  .b-btn.stop:hover { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.6); }
+  .b-btn:active { transform: scale(.97); }
+  .b-btn .ico { font-size: 15px; }
+  .b-btn .ico.play { margin-left: 2px; }
+  .b-secondary { display: flex; gap: 10px; margin-bottom: 18px; }
+  .b-pill { flex: 1; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
+            color: #a6aab2; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition-property: background, color, border-color; transition-duration: .15s; }
+  .b-pill:hover { background: rgba(255,255,255,.08); color: #e2e4e8; border-color: rgba(255,255,255,.16); }
+  .b-footer { display: flex; justify-content: center; gap: 14px; font-size: 11px; color: #54575e;
+              border-top: 1px solid rgba(255,255,255,.06); padding-top: 13px; font-family: ui-monospace, Menlo, monospace; }
+  .b-footer .ok { color: #4ade80; }
+
+  /* ============================================================
+     ③ 极客终端 Terminal 风
+     ============================================================ */
+  .stage-c { background: radial-gradient(ellipse at center, #1a2e1a 0%, #0c140c 75%); }
+  .win-c {
+    width: 470px; border-radius: 12px; overflow: hidden;
+    background: rgba(8, 14, 8, .97); border: 1px solid rgba(74,222,128,.25);
+    box-shadow: 0 0 40px rgba(74,222,128,.12), 0 30px 70px rgba(0,0,0,.7);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    position: relative;
+  }
+  .win-c::after { /* 扫描线 */
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(74,222,128,.025) 0 1px, transparent 1px 3px);
+  }
+  .win-c .titlebar { display: flex; align-items: center; padding: 12px 14px;
+                     background: rgba(74,222,128,.06); border-bottom: 1px solid rgba(74,222,128,.18); }
+  .win-c .term-title { margin: 0 auto; font-size: 12px; color: rgba(74,222,128,.7); }
+  .win-c .content { padding: 18px 20px 16px; }
+  .c-line { font-size: 13px; line-height: 1.9; color: #86efac; text-shadow: 0 0 8px rgba(74,222,128,.35); white-space: pre; }
+  .c-line .prompt { color: #4ade80; font-weight: 700; }
+  .c-line .cmd { color: #e7fdd9; }
+  .c-line .dim { color: rgba(134,239,172,.5); }
+  .c-line .ok { color: #4ade80; font-weight: 700; }
+  .c-line .val { color: #67e8f9; text-shadow: 0 0 8px rgba(103,232,249,.3); }
+  .c-cursor { display: inline-block; width: 8px; height: 15px; background: #4ade80; vertical-align: -2px;
+              animation: blink 1.05s steps(1) infinite; box-shadow: 0 0 8px rgba(74,222,128,.8); }
+  @keyframes blink { 50% { opacity: 0; } }
+  .c-divider { border: none; border-top: 1px dashed rgba(74,222,128,.25); margin: 14px 0; }
+  .c-actions { display: flex; gap: 12px; margin: 16px 0 12px; }
+  .c-btn {
+    flex: 1; height: 76px; background: transparent; cursor: pointer; border-radius: 8px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    transition-property: background, box-shadow, transform; transition-duration: .15s;
+  }
+  .c-btn .ico { font-size: 20px; }
+  .c-btn.start { border: 1.5px solid #4ade80; color: #4ade80; text-shadow: 0 0 8px rgba(74,222,128,.5); }
+  .c-btn.start:hover { background: rgba(74,222,128,.14); box-shadow: 0 0 20px rgba(74,222,128,.25), inset 0 0 12px rgba(74,222,128,.1); }
+  .c-btn.stop { border: 1.5px solid #f87171; color: #f87171; text-shadow: 0 0 8px rgba(248,113,113,.5); }
+  .c-btn.stop:hover { background: rgba(248,113,113,.12); box-shadow: 0 0 20px rgba(248,113,113,.22), inset 0 0 12px rgba(248,113,113,.08); }
+  .c-btn:active { transform: scale(.96); }
+  .c-links { display: flex; gap: 18px; justify-content: center; margin-bottom: 12px; }
+  .c-link { background: none; border: none; cursor: pointer; font-family: inherit; font-size: 12px;
+            color: rgba(134,239,172,.65); text-decoration: underline; text-underline-offset: 3px; }
+  .c-link:hover { color: #4ade80; text-shadow: 0 0 8px rgba(74,222,128,.5); }
+  .c-footer { text-align: center; font-size: 11px; color: rgba(134,239,172,.4);
+              border-top: 1px dashed rgba(74,222,128,.25); padding-top: 11px; white-space: nowrap; }
+
+  /* ============================================================
+     ④ 彩色便当 Bento 风
+     ============================================================ */
+  .stage-d { background: linear-gradient(180deg, #f6f1e7, #efe7d8); }
+  .win-d {
+    width: 470px; border-radius: 24px; overflow: hidden; background: #fffdf8;
+    box-shadow: 0 30px 70px rgba(120,90,30,.22), 0 2px 0 rgba(255,255,255,.8) inset;
+  }
+  .win-d .titlebar { display: flex; align-items: center; padding: 14px 18px 0; }
+  .win-d .hint { margin-left: auto; font-size: 11px; color: #b8ab8f; }
+  .win-d .content { padding: 14px 18px 18px; }
+  .win-d .header { display: flex; align-items: center; gap: 12px; margin: 4px 4px 14px; }
+  .win-d .logo { width: 46px; height: 46px; border-radius: 13px; box-shadow: 0 4px 12px rgba(0,0,0,.14); }
+  .win-d h1.title { font-size: 20px; font-weight: 800; color: #2c2416; letter-spacing: -.02em; }
+  .win-d .sub { font-size: 12px; color: #a3957c; margin-top: 1px; font-weight: 500; }
+  .d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .d-tile { border-radius: 18px; padding: 16px; position: relative; }
+  .d-status { grid-column: 1 / -1; background: #dff5e7; display: flex; align-items: center; gap: 12px; }
+  .d-dot { width: 14px; height: 14px; border-radius: 50%; background: #17b26a; flex-shrink: 0;
+           box-shadow: 0 0 0 4px rgba(23,178,106,.2); animation: breathe 2s ease-in-out infinite; }
+  .d-status .t { font-size: 16px; font-weight: 800; color: #0c5c36; }
+  .d-status .s { font-size: 12px; color: #4d8a6a; font-weight: 500; margin-top: 1px; }
+  .d-addr { margin-left: auto; font-size: 12.5px; font-weight: 700; color: #0c5c36;
+            background: rgba(255,255,255,.75); padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .d-btn {
+    border: none; cursor: pointer; height: 118px; border-radius: 18px; color: #fff; text-align: left;
+    padding: 16px; display: flex; flex-direction: column; justify-content: space-between;
+    transition-property: transform, box-shadow, filter; transition-duration: .15s;
+  }
+  .d-btn .ico { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); }
+  .d-btn .ico.play { margin-left: 4px; }
+  .d-btn .label { font-size: 17px; font-weight: 800; }
+  .d-btn .en { font-size: 11px; opacity: .75; font-weight: 600; letter-spacing: .04em; margin-top: 2px; }
+  .d-btn.start { background: linear-gradient(150deg, #4d8dff, #1e5ef0); box-shadow: 0 10px 24px rgba(30,94,240,.35); }
+  .d-btn.stop  { background: linear-gradient(150deg, #ff7a5c, #f03e2b); box-shadow: 0 10px 24px rgba(240,62,43,.32); }
+  .d-btn.start:hover { transform: translateY(-2px) rotate(-.5deg); filter: brightness(1.06); }
+  .d-btn.stop:hover  { transform: translateY(-2px) rotate(.5deg);  filter: brightness(1.05); }
+  .d-btn:active { transform: scale(.96); }
+  .d-bottom { grid-column: 1 / -1; background: #f3ecdd; display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+  .d-pill { flex: 1; height: 34px; border: none; border-radius: 999px; cursor: pointer;
+            background: #fffdf8; color: #5c4f36; font-size: 13px; font-weight: 700;
+            box-shadow: 0 1px 4px rgba(120,90,30,.14);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition-property: transform, box-shadow; transition-duration: .15s; }
+  .d-pill:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(120,90,30,.2); }
+  .d-pill:active { transform: scale(.97); }
+  .d-footer { text-align: center; font-size: 11.5px; color: #a3957c; margin-top: 12px; font-weight: 500; white-space: nowrap; }
+  .d-footer b { color: #17b26a; }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>DeepSeek Harness 启动器 · 四款风格设计稿</h1>
+  <p>悬停 / 按压按钮可看微交互 · 窗口均将支持调整大小 · 选中后我用 SwiftUI 实现</p>
+</div>
+
+<!-- ================= ① 液态玻璃 ================= -->
+<div class="section">
+  <div class="meta"><span class="num">01</span><h2>液态玻璃 Liquid Glass</h2></div>
+  <div class="desc"><b>macOS 26 最新原生美学</b> —— 半透明磨砂材质悬浮在彩色壁纸上，按钮如彩色玻璃。最"苹果"、最有时代感，录屏第一眼就让人觉得是 2026 年的新应用。</div>
+  <div class="stage stage-a">
+    <div class="win-a">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="hint">↔ 可调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../logo-1.png" alt="logo">
+          <div>
+            <div class="title">DeepSeek Harness</div>
+            <div class="sub">本地服务控制台</div>
+          </div>
+        </div>
+        <div class="glass-card">
+          <div class="glass-dot"></div>
+          <div>
+            <div class="glass-status">服务运行中</div>
+            <div class="glass-detail">已就绪 · 响应正常</div>
+          </div>
+          <div class="glass-addr mono">127.0.0.1:3080</div>
+        </div>
+        <div class="glass-actions">
+          <button class="glass-btn start"><span class="ico play">▶</span>启动</button>
+          <button class="glass-btn stop"><span class="ico">⏻</span>退出服务</button>
+        </div>
+        <div class="glass-secondary">
+          <button class="glass-pill">🌐 在浏览器中打开</button>
+          <button class="glass-pill">⟳ 刷新状态</button>
+        </div>
+        <div class="glass-footer">● 服务运行中 · 端口 3080 可访问 · 日志 dsh-server.log</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ② 极简暗夜 ================= -->
+<div class="section">
+  <div class="meta"><span class="num">02</span><h2>极简暗夜 Linear 风</h2></div>
+  <div class="desc"><b>开发者圈的审美标杆</b> —— 深空灰 + 发丝级分割线 + 等宽字体点缀，白色主按钮反差出挑。克制、专业、耐看，技术观众缘最好。</div>
+  <div class="stage stage-b">
+    <div class="win-b">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="tab">deepseek-harness</div>
+        <div class="lights-spacer"></div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <div class="mark">DS</div>
+          <div>
+            <div class="title">DeepSeek Harness</div>
+            <div class="sub">control-panel · v1.0</div>
+          </div>
+          <div class="addr mono">127.0.0.1:3080</div>
+        </div>
+        <div class="b-statusrow">
+          <div class="b-dot"></div>
+          <div class="b-status">服务运行中</div>
+          <div class="b-ms">● 12ms</div>
+        </div>
+        <div class="b-label">操作</div>
+        <div class="b-actions">
+          <button class="b-btn start"><span class="ico play">▶</span>启动</button>
+          <button class="b-btn stop"><span class="ico">⏻</span>退出服务</button>
+        </div>
+        <div class="b-secondary">
+          <button class="b-pill">🌐 在浏览器中打开</button>
+          <button class="b-pill">⟳ 刷新状态</button>
+        </div>
+        <div class="b-footer"><span class="ok">● running</span><span>port 3080</span><span>pid 65425</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ③ 极客终端 ================= -->
+<div class="section">
+  <div class="meta"><span class="num">03</span><h2>极客终端 Terminal 风</h2></div>
+  <div class="desc"><b>把控制台做成一台复古终端</b> —— 磷光绿字符、闪烁光标、命令行式按钮。和 DeepSeek Harness 的"开发者工具"身份绝配，录屏辨识度最高、最有梗。</div>
+  <div class="stage stage-c">
+    <div class="win-c">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="term-title">dsh — control panel — 80×24</div>
+        <div class="lights-spacer" style="width:52px"></div>
+      </div>
+      <div class="content">
+        <div class="c-line"><span class="prompt">➜</span> <span class="cmd">dsh status</span></div>
+        <div class="c-line"><span class="ok">● RUNNING</span>  <span class="val">127.0.0.1:3080</span>  <span class="dim">pid 65425 · up 02:13:45</span></div>
+        <div class="c-line"><span class="dim">web ui ready · log → dsh-server.log</span></div>
+        <div class="c-line"><span class="prompt">➜</span> <span class="c-cursor"></span></div>
+        <hr class="c-divider">
+        <div class="c-actions">
+          <button class="c-btn start"><span class="ico">▶</span>[ 启动 start ]</button>
+          <button class="c-btn stop"><span class="ico">⏻</span>[ 退出 stop ]</button>
+        </div>
+        <div class="c-links">
+          <button class="c-link">$ open http://127.0.0.1:3080</button>
+          <button class="c-link">$ dsh status --refresh</button>
+        </div>
+        <div class="c-footer">▲▼ 服务运行中 · 端口 3080 可访问 · ctrl+c 亦可停止</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ④ 彩色便当 ================= -->
+<div class="section">
+  <div class="meta"><span class="num">04</span><h2>彩色便当 Bento 风</h2></div>
+  <div class="desc"><b>社媒传播的最爱</b> —— 奶油底色 + 大圆角色块网格，状态、操作一眼尽收。饱和度高、对比强，小窗截图发朋友圈/小红书都醒目。</div>
+  <div class="stage stage-d">
+    <div class="win-d">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="hint">↔ 可调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../logo-1.png" alt="logo">
+          <div>
+            <div class="title">DeepSeek Harness</div>
+            <div class="sub">本地服务控制台</div>
+          </div>
+        </div>
+        <div class="d-grid">
+          <div class="d-tile d-status">
+            <div class="d-dot"></div>
+            <div>
+              <div class="t">服务运行中</div>
+              <div class="s">已就绪 · 响应正常</div>
+            </div>
+            <div class="d-addr mono">127.0.0.1:3080</div>
+          </div>
+          <button class="d-btn start">
+            <span class="ico play">▶</span>
+            <span><span class="label">启动</span><div class="en">START</div></span>
+          </button>
+          <button class="d-btn stop">
+            <span class="ico">⏻</span>
+            <span><span class="label">退出服务</span><div class="en">STOP</div></span>
+          </button>
+          <div class="d-tile d-bottom">
+            <button class="d-pill">🌐 在浏览器中打开</button>
+            <button class="d-pill">⟳ 刷新状态</button>
+          </div>
+        </div>
+        <div class="d-footer"><b>●</b> 服务运行中 · 端口 3080 可访问</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

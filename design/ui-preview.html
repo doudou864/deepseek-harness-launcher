@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>DeepSeek Harness 启动器 — UI 设计预览</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "SF Pro Text", "PingFang SC", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px 60px;
+  }
+  .page-title { color: rgba(255,255,255,.95); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .page-sub { color: rgba(255,255,255,.7); font-size: 14px; margin-bottom: 36px; }
+  .stage { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .state-label { color: rgba(255,255,255,.85); font-size: 13px; font-weight: 600; text-align: center; margin-bottom: 12px; letter-spacing: .05em; }
+  .col { display: flex; flex-direction: column; }
+
+  /* ===== macOS 窗口 ===== */
+  .window {
+    width: 500px;
+    background: rgba(246, 246, 248, .92);
+    backdrop-filter: blur(40px);
+    border-radius: 14px;
+    box-shadow: 0 24px 70px rgba(0,0,0,.35), 0 0 0 .5px rgba(0,0,0,.15);
+    overflow: hidden;
+  }
+  .titlebar { display: flex; align-items: center; padding: 14px 16px 0; }
+  .lights { display: flex; gap: 8px; }
+  .light { width: 12px; height: 12px; border-radius: 50%; }
+  .light.r { background: #FF5F57; } .light.y { background: #FEBC2E; } .light.g { background: #28C840; }
+  .resize-hint { margin-left: auto; font-size: 11px; color: #9a9aa0; }
+
+  .content { padding: 18px 24px 20px; }
+
+  /* ===== 头部 ===== */
+  .header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .app-icon { width: 52px; height: 52px; border-radius: 12px; object-fit: cover;
+              box-shadow: 0 3px 10px rgba(0,0,0,.18); }
+  .header h1 { font-size: 22px; font-weight: 700; color: #1c1c1e; letter-spacing: -.02em; }
+  .header .sub { font-size: 12.5px; color: #8e8e93; margin-top: 2px; }
+
+  /* ===== 状态卡片 ===== */
+  .status-card {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,.75);
+    border: .5px solid rgba(0,0,0,.06);
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 18px;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; position: relative; }
+  .dot.on  { background: #30D158; box-shadow: 0 0 0 3px rgba(48,209,88,.18); }
+  .dot.on::after { content: ''; position: absolute; inset: -5px; border-radius: 50%;
+                   border: 2px solid rgba(48,209,88,.5); animation: pulse 1.8s ease-out infinite; }
+  @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+  .dot.off { background: #c7c7cc; box-shadow: 0 0 0 3px rgba(199,199,204,.2); }
+  .status-text { font-size: 15px; font-weight: 600; color: #1c1c1e; }
+  .status-detail { font-size: 12px; color: #8e8e93; margin-top: 1px; }
+  .addr {
+    margin-left: auto; flex-shrink: 0;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12.5px;
+    padding: 5px 10px; border-radius: 7px; white-space: nowrap;
+  }
+  .addr.on  { color: #0a6e35; background: rgba(48,209,88,.14); }
+  .addr.off { color: #8e8e93; background: rgba(142,142,147,.12); }
+
+  /* ===== 主按钮 ===== */
+  .actions { display: flex; gap: 14px; margin-bottom: 16px; }
+  .big-btn {
+    flex: 1; height: 108px; border: none; border-radius: 14px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+    font-size: 16.5px; font-weight: 600; letter-spacing: .02em; color: #fff;
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+  .big-btn .ico { font-size: 26px; line-height: 1; }
+  .big-btn.start { background: linear-gradient(180deg, #3b8cff 0%, #0a6cff 100%);
+                   box-shadow: 0 6px 16px rgba(10,108,255,.32), inset 0 1px 0 rgba(255,255,255,.25); }
+  .big-btn.stop  { background: linear-gradient(180deg, #ff5f54 0%, #e8322a 100%);
+                   box-shadow: 0 6px 16px rgba(232,50,42,.30), inset 0 1px 0 rgba(255,255,255,.22); }
+  .big-btn.start:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .big-btn.stop:hover  { filter: brightness(1.05); transform: translateY(-1px); }
+  .big-btn:active { transform: translateY(1px) scale(.985); }
+  .big-btn:disabled {
+    background: linear-gradient(180deg, #d7d7db 0%, #c9c9ce 100%);
+    box-shadow: none; color: rgba(255,255,255,.85); cursor: default; transform: none; filter: none;
+  }
+
+  /* ===== 次级按钮 ===== */
+  .secondary { display: flex; gap: 12px; margin-bottom: 16px; }
+  .pill-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    height: 34px; border-radius: 9px; font-size: 13.5px; font-weight: 500; color: #3a3a3c;
+    background: rgba(255,255,255,.85); border: .5px solid rgba(0,0,0,.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); cursor: pointer; transition: background .12s ease;
+  }
+  .pill-btn:hover { background: #ffffff; }
+  .pill-btn .ico { font-size: 14px; }
+
+  /* ===== 底部状态行 ===== */
+  .footer {
+    text-align: center; font-size: 12px; color: #8e8e93;
+    padding-top: 12px; border-top: .5px solid rgba(0,0,0,.07);
+    white-space: nowrap;
+  }
+  .footer b { color: #30a25e; font-weight: 600; }
+  .footer .dim { color: #aeaeb2; }
+</style>
+</head>
+<body>
+
+<div class="page-title">DeepSeek Harness 启动器 · 新 UI 设计稿</div>
+<div class="page-sub">两种状态预览（窗口将支持自由调整大小，内容自适应）</div>
+
+<div class="stage">
+
+  <!-- ============ 状态一：运行中 ============ -->
+  <div class="col">
+    <div class="state-label">● 运行中</div>
+    <div class="window">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="resize-hint">↔ 可拖拽调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="app-icon" src="../logo-1.png" alt="logo">
+          <div>
+            <h1>DeepSeek Harness</h1>
+            <div class="sub">本地服务控制台</div>
+          </div>
+        </div>
+
+        <div class="status-card">
+          <div class="dot on"></div>
+          <div>
+            <div class="status-text">服务运行中</div>
+            <div class="status-detail">已就绪 · 响应正常</div>
+          </div>
+          <div class="addr on">127.0.0.1:3080</div>
+        </div>
+
+        <div class="actions">
+          <button class="big-btn start" style="filter:grayscale(.4) brightness(.92); cursor:default">
+            <span class="ico">▶</span>启动
+          </button>
+          <button class="big-btn stop">
+            <span class="ico">⏻</span>退出服务
+          </button>
+        </div>
+
+        <div class="secondary">
+          <button class="pill-btn"><span class="ico">🌐</span>在浏览器中打开</button>
+          <button class="pill-btn"><span class="ico">⟳</span>刷新状态</button>
+        </div>
+
+        <div class="footer"><b>●</b> 服务运行中 <span class="dim">·</span> 端口 3080 可访问 <span class="dim">·</span> 日志 ~/Library/…/dsh-server.log</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 状态二：未运行 ============ -->
+  <div class="col">
+    <div class="state-label">○ 未运行</div>
+    <div class="window">
+      <div class="titlebar">
+        <div class="lights"><div class="light r"></div><div class="light y"></div><div class="light g"></div></div>
+        <div class="resize-hint">↔ 可拖拽调整大小</div>
+      </div>
+      <div class="content">
+        <div class="header">
+          <img class="app-icon" src="../logo-1.png" alt="logo">
+          <div>
+            <h1>DeepSeek Harness</h1>
+            <div class="sub">本地服务控制台</div>
+          </div>
+        </div>
+
+        <div class="status-card">
+          <div class="dot off"></div>
+          <div>
+            <div class="status-text" style="color:#6e6e73">服务未运行</div>
+            <div class="status-detail">点击下方「启动」开始</div>
+          </div>
+          <div class="addr off">127.0.0.1:3080</div>
+        </div>
+
+        <div class="actions">
+          <button class="big-btn start">
+            <span class="ico">▶</span>启动
+          </button>
+          <button class="big-btn stop" disabled>
+            <span class="ico">⏻</span>退出服务
+          </button>
+        </div>
+
+        <div class="secondary">
+          <button class="pill-btn"><span class="ico">🌐</span>在浏览器中打开</button>
+          <button class="pill-btn"><span class="ico">⟳</span>刷新状态</button>
+        </div>
+
+        <div class="footer"><span class="dim">○ 服务未运行 · 启动后浏览器将自动打开</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

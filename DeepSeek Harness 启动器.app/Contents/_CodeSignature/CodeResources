@@ -8,6 +8,10 @@
 		<data>
 		MlWH9bfvhKJU8JJSfZhdN/HPOLY=
 		</data>
+		<key>Resources/logo.png</key>
+		<data>
+		+37syVMhLtLw2dHnLYsdSK29Z64=
+		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
@@ -16,6 +20,13 @@
 			<key>hash2</key>
 			<data>
 			0wvmnfnkXWGbcxR7XO20QrI+t+WFwkfvP6C+gnMiTfE=
+			</data>
+		</dict>
+		<key>Resources/logo.png</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			wjltnp3XbS/X7EXCq5TFq3e5eBMONqp2bx0hCtxriZo=
 			</data>
 		</dict>
 	</dict>

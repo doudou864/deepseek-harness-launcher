@@ -1,0 +1,62 @@
+#!/bin/bash
+# ============================================================
+#  DeepSeek Harness 停止器（.app 版）
+#  按启动器记录的 PID 精确停止服务，系统通知反馈
+# ============================================================
+
+URL="http://127.0.0.1:3080"
+RUNTIME_DIR="$HOME/Library/Application Support/DeepSeek Harness"
+PID_FILE="$RUNTIME_DIR/dsh-server.pid"
+
+notify() {
+    osascript -e "display notification \"$1\" with title \"DeepSeek Harness\"" 2>/dev/null
+}
+
+mkdir -p "$RUNTIME_DIR"
+
+# ---------- 1. 读取启动器记录的 PID ----------
+if [ ! -f "$PID_FILE" ]; then
+    if curl -s -o /dev/null --max-time 2 "$URL"; then
+        notify "检测到服务在运行，但非本启动器拉起，请手动停止"
+        exit 1
+    fi
+    notify "服务当前未运行"
+    exit 0
+fi
+
+SERVER_PID=$(cat "$PID_FILE" 2>/dev/null)
+
+# ---------- 2. 检查进程是否还活着 ----------
+if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+    rm -f "$PID_FILE"
+    notify "服务已不在运行"
+    exit 0
+fi
+
+# ---------- 3. 停止服务 ----------
+pkill -P "$SERVER_PID" 2>/dev/null
+kill "$SERVER_PID" 2>/dev/null
+
+STOPPED=0
+for i in $(seq 1 15); do
+    if ! curl -s -o /dev/null --max-time 2 "$URL"; then
+        STOPPED=1
+        break
+    fi
+    sleep 1
+done
+
+if [ "$STOPPED" = "0" ]; then
+    pkill -9 -P "$SERVER_PID" 2>/dev/null
+    kill -9 "$SERVER_PID" 2>/dev/null
+fi
+
+rm -f "$PID_FILE"
+
+if [ "$STOPPED" = "1" ]; then
+    notify "服务已停止"
+else
+    notify "已发送终止信号，但服务仍可访问，请手动检查"
+fi
+
+exit 0

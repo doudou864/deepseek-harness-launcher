@@ -1,0 +1,79 @@
+#!/bin/bash
+# ============================================================
+#  DeepSeek Harness 启动器（.app 版）
+#  双击后：后台启动服务 → 自动打开浏览器 → 系统通知反馈
+#  服务保持后台运行，用「停止 DeepSeek Harness.app」停止
+# ============================================================
+
+URL="http://127.0.0.1:3080"
+RUNTIME_DIR="$HOME/Library/Application Support/DeepSeek Harness"
+LOG="$RUNTIME_DIR/dsh-server.log"
+PID_FILE="$RUNTIME_DIR/dsh-server.pid"
+
+# .app 由 launchd 拉起，PATH 极简，找不到用户自装的 Node.js，按常见安装位置补充
+for _p in "$HOME/.local/bin" /opt/homebrew/bin /usr/local/bin \
+          "$HOME/.volta/bin" "$HOME/.asdf/shims" "$HOME/.nvm/versions/node/"*/bin; do
+    [ -x "$_p/node" ] && PATH="$_p:$PATH"
+done
+export PATH; unset _p
+
+notify() {
+    osascript -e "display notification \"$1\" with title \"DeepSeek Harness\"" 2>/dev/null
+}
+
+mkdir -p "$RUNTIME_DIR"
+
+# ---------- 1. 检查 Node.js ----------
+if ! command -v node >/dev/null 2>&1; then
+    notify "启动失败：未检测到 Node.js，请先执行 brew install node"
+    exit 1
+fi
+
+# ---------- 2. 端口已占用则直接开浏览器 ----------
+if curl -s -o /dev/null --max-time 2 "$URL"; then
+    open "$URL"
+    notify "已在运行，直接打开浏览器"
+    exit 0
+fi
+
+# ---------- 3. 优先复用已下载的 dsh 缓存 ----------
+DSH_BIN=""
+for d in "$HOME"/.npm/_npx/*/node_modules/.bin/dsh; do
+    [ -x "$d" ] && DSH_BIN="$d"
+done
+
+if [ -n "$DSH_BIN" ]; then
+    RUN_CMD=("$DSH_BIN" "web")
+else
+    RUN_CMD=(npx -y @deepseek-ai/dsh web)
+fi
+
+# ---------- 4. 后台分离启动服务（nohup，脱离本进程）----------
+nohup "${RUN_CMD[@]}" > "$LOG" 2>&1 &
+SERVER_PID=$!
+echo "$SERVER_PID" > "$PID_FILE"
+disown "$SERVER_PID" 2>/dev/null
+
+# ---------- 5. 等待端口就绪后自动打开浏览器 ----------
+READY=0
+for i in $(seq 1 90); do
+    if curl -s -o /dev/null --max-time 2 "$URL"; then
+        READY=1
+        break
+    fi
+    if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+        break
+    fi
+    sleep 1
+done
+
+if [ "$READY" = "1" ]; then
+    open "$URL"
+    notify "服务已启动：$URL"
+else
+    # 启动失败，清理记录
+    rm -f "$PID_FILE"
+    notify "启动失败，请查看日志：$LOG"
+fi
+
+exit 0

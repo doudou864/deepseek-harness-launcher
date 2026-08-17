@@ -65,8 +65,8 @@
 
 ## 停止与卸载
 
-- **停止**：双击 `停止 DeepSeek Harness.app` 或 `停止 DeepSeek Harness.command`，或按 `Ctrl+C`。
-- **卸载**：直接删除本目录下的文件 + 删掉 `~/Library/Application Support/DeepSeek Harness/` 即可，不写注册表、不留后台进程。
+- **停止**（任选其一，各入口共用同一份 PID 记录，可交叉停止）：启动器面板的 **退出服务** 按钮（推荐）/ 双击 `停止 DeepSeek Harness.app` / 双击 `停止 DeepSeek Harness.command` / 在启动它的 Terminal 窗口按 `Ctrl+C`（仅 `.command` 入口适用）。
+- **卸载**：先停止服务，然后删除本目录下的文件 + 删掉 `~/Library/Application Support/DeepSeek Harness/` 即可全部清除——不装守护进程、不写系统配置、无残留。
 
 ## 常见问题
 
